@@ -36,6 +36,9 @@ void setup_co2() {
   co2Serial.begin(MH_Z19_BAUDRATE);
   co2.begin(co2Serial);
   co2.autoCalibration(false);
+  #ifdef DEBUG
+  co2.printCommunication(true, true);
+  #endif
 }
 
 void setup_wifi() {
@@ -74,8 +77,8 @@ void reconnect() {
 
 void publishMeasurement() {
   int ppm_uart = co2.getCO2();
-  if (ppm_uart < 0) {
-    DEBUG("Error reading sensor measurement");
+  if (co2.errorCode != RESULT_OK) {
+    DEBUG2("Error reading sensor measurement. Error code:", co2.errorCode);
     return;
   }
   snprintf(msg, MSG_BUFFER_SIZE, "%d", ppm_uart);
