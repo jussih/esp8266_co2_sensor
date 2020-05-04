@@ -84,7 +84,9 @@ void publishMeasurement() {
 }
 
 void setup() {
+  #ifdef DEBUG
   Serial.begin(115200);
+  #endif
   setup_wifi();
   setup_co2();
   client.setServer(mqtt_server, 1883);
