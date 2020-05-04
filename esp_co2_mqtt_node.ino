@@ -1,13 +1,15 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <SoftwareSerial.h>
-#include "MHZ.h"
+#include "MHZ19.h"
 
 #define MEASUREMENT_INTERVAL 120000
 
 // CO2 sensor UART pins
 #define MH_Z19_RX 4
 #define MH_Z19_TX 5
+#define MH_Z19_BAUDRATE 9600
+const unsigned int MH_Z19_PREHEAT_TIME = 3 * 60 * 1000;
 
 // Connect to the WiFi
 const char* ssid = "";
@@ -24,7 +26,15 @@ unsigned long lastMsg = 0;
  
 WiFiClient espClient;
 PubSubClient client(espClient);
-MHZ co2(MH_Z19_RX, MH_Z19_TX, MHZ19B);
+MHZ19 co2;
+SoftwareSerial co2Serial(MH_Z19_RX, MH_Z19_TX);
+bool isCO2SensorReady = false;
+
+void setup_co2() {
+  co2Serial.begin(MH_Z19_BAUDRATE);
+  co2.begin(co2Serial);
+  co2.autoCalibration(false);
+}
 
 void setup_wifi() {
   delay(10);
@@ -69,26 +79,8 @@ void reconnect() {
   }
 }
 
-void publishDiscovery() {
-  // Publish HomeAssistant MQTT autodiscovery message
-  const unsigned char discovery[] = "{\"name\": \"CO2\", \"state_topic\": \"homeassistant/sensor/sensorBedroomCO2/state\", \"unit_of_measurement\": \"PPM\"}";
-  Serial.print("Publishing discovery message...");
-  //Serial.println(discovery);
-  client.beginPublish(mqtt_config_topic, sizeof(discovery), false);
-  client.write(discovery, sizeof(discovery));
-  bool result = client.endPublish();
-  
-  if (!result) {
-    Serial.println("Discovery publish failed!");
-  }
-}
-
 void publishMeasurement() {
-  if (!co2.isReady()) {
-    Serial.println("Sensor not ready for measurement...");
-    return;
-  }
-  int ppm_uart = co2.readCO2UART();
+  int ppm_uart = co2.getCO2();
   if (ppm_uart < 0) {
     Serial.println("Error reading sensor measurement");
     return;
@@ -102,6 +94,7 @@ void publishMeasurement() {
 void setup() {
   Serial.begin(115200);
   setup_wifi();
+  setup_co2();
   client.setServer(mqtt_server, 1883);
 }
 
@@ -109,11 +102,13 @@ void loop()
 {
   if (!client.connected()) {
     reconnect();
-    publishDiscovery();
   }
   client.loop();
   unsigned long now = millis();
-  if (now - lastMsg > MEASUREMENT_INTERVAL) {
+  if (!isCO2SensorReady && (now > MH_Z19_PREHEAT_TIME)) {
+    isCO2SensorReady = true;
+  }
+  if (isCO2SensorReady && (now - lastMsg > MEASUREMENT_INTERVAL)) {
     lastMsg = now;
     publishMeasurement();
   }
