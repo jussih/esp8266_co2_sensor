@@ -5,13 +5,12 @@
 //#define DEBUG
 #include "debug.h"
 
-#define MEASUREMENT_INTERVAL 120000
-
 // CO2 sensor UART pins
 #define MH_Z19_RX 4
 #define MH_Z19_TX 5
 #define MH_Z19_BAUDRATE 9600
-const unsigned int MH_Z19_PREHEAT_TIME = 3 * 60 * 1000;
+const unsigned long MH_Z19_PREHEAT_TIME = 3 * 60 * 1000;
+const unsigned long MEASUREMENT_INTERVAL = 2 * 60 * 1000;
 
 // Connect to the WiFi
 const char* ssid = "";
