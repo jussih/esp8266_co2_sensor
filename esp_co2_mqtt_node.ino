@@ -75,7 +75,7 @@ void reconnect() {
 }
 
 void publishMeasurement() {
-  int ppm_uart = co2.getCO2();
+  int ppm_uart = co2.getCO2(false, false);  // limited read, force = false
   if (co2.errorCode != RESULT_OK) {
     DEBUG2("Error reading sensor measurement. Error code:", co2.errorCode);
     return;
