@@ -1,4 +1,4 @@
-  #ifdef DEBUG
+  #ifdef DEBUG_ENABLED
     #define DEBUG4(x,y,z,a) Serial.print(x);Serial.print(" ");Serial.print(y);Serial.print(" ");Serial.print(z);Serial.print(" ");Serial.println (a)
     #define DEBUG3(x,y,z) Serial.print(x);Serial.print(" ");Serial.print(y);Serial.print(" ");Serial.println (z)
     #define DEBUG2(y,z) Serial.print(y);Serial.print(" ");Serial.println(z)
