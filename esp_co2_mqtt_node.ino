@@ -1,8 +1,9 @@
 #include <DHT.h>
 #include <ESP8266WiFi.h>
+#include <MHZ19.h>
 #include <PubSubClient.h>
 #include <SoftwareSerial.h>
-#include "MHZ19.h"
+#include "secrets.h"
 
 //#define DEBUG_ENABLED
 #include "debug.h"
@@ -19,14 +20,14 @@ const unsigned long MEASUREMENT_INTERVAL = 2 * 60 * 1000;
 #define DHT_TYPE DHT21        // AM2301 sensor type
 
 // Connect to the WiFi
-const char* ssid = "";
-const char* password = "";
-const char* mqtt_server = "";
-const char* mqtt_user = "";
-const char* mqtt_password = "";
-const char* mqtt_co2_state_topic = "homeassistant/sensor/sensorBedroomCO2/state";
-const char* mqtt_temp_state_topic = "homeassistant/sensor/sensorBedroomTemperature/state";
-const char* mqtt_humidity_state_topic = "homeassistant/sensor/sensorBedroomHumidity/state";
+const char* ssid = WLAN_SSID;
+const char* password = WLAN_PASSWORD;
+const char* mqtt_server = MQTT_SERVER;
+const char* mqtt_user = MQTT_USER;
+const char* mqtt_password = MQTT_PASSWORD;
+const char* mqtt_co2_state_topic = MQTT_CO2_TOPIC;
+const char* mqtt_temp_state_topic = MQTT_TEMPERATURE_TOPIC;
+const char* mqtt_humidity_state_topic = MQTT_HUMIDITY_TOPIC;
 
 #define MQTT_BUFFER_SIZE (50)
 char mqttBuffer[MQTT_BUFFER_SIZE];
