@@ -8,7 +8,7 @@
 //#define DEBUG_ENABLED
 #include "debug.h"
 
-// CO2 sensor UART pins
+// CO2 sensor
 #define MH_Z19_RX 4           // D2 on NodeMCU devkit
 #define MH_Z19_TX 5           // D1 on NodeMCU devkit
 #define MH_Z19_BAUDRATE 9600
@@ -19,9 +19,11 @@ const unsigned long MEASUREMENT_INTERVAL = 2 * 60 * 1000;
 #define DHT_PIN 12            // DHT data, D6 on NodeMCU devkit
 #define DHT_TYPE DHT21        // AM2301 sensor type
 
-// Connect to the WiFi
+// WiFi
 const char* ssid = WLAN_SSID;
 const char* password = WLAN_PASSWORD;
+
+// MQTT
 const char* mqtt_server = MQTT_SERVER;
 const char* mqtt_user = MQTT_USER;
 const char* mqtt_password = MQTT_PASSWORD;
@@ -29,7 +31,7 @@ const char* mqtt_co2_state_topic = MQTT_CO2_TOPIC;
 const char* mqtt_temp_state_topic = MQTT_TEMPERATURE_TOPIC;
 const char* mqtt_humidity_state_topic = MQTT_HUMIDITY_TOPIC;
 
-#define MQTT_BUFFER_SIZE (50)
+#define MQTT_BUFFER_SIZE (10)
 char mqttBuffer[MQTT_BUFFER_SIZE];
 unsigned long lastMsg = 0;
  
@@ -40,7 +42,13 @@ SoftwareSerial co2Serial(MH_Z19_RX, MH_Z19_TX);
 bool isCO2SensorReady = false;
 DHT dht(DHT_PIN, DHT_TYPE);
 
-void setup_co2() {
+void setupSerial() {
+  #ifdef DEBUG_ENABLED
+  Serial.begin(115200);
+  #endif
+}
+
+void setupCO2() {
   co2Serial.begin(MH_Z19_BAUDRATE);
   co2.begin(co2Serial);
   co2.autoCalibration(false);
@@ -49,11 +57,11 @@ void setup_co2() {
   #endif
 }
 
-void setup_dht() {
+void setupDHT() {
   dht.begin();
 }
 
-void setup_wifi() {
+void setupWifi() {
   delay(10);
   DEBUG2("Connecting to", ssid);
   WiFi.mode(WIFI_STA);
@@ -68,12 +76,16 @@ void setup_wifi() {
   DEBUG2("IP address:", WiFi.localIP());
 }
 
-void reconnect() {
+void setupMQTT() {
+  mqttClient.setServer(mqtt_server, 1883);
+}
+
+void reconnectMQTT() {
   // Loop until we're reconnected
   while (!mqttClient.connected()) {
     DEBUG("Attempting MQTT connection...");
     // Create a random mqttClient ID
-    String clientId = "ESP8266Client-";
+    String clientId = "CO2Sensor-";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
     if (mqttClient.connect(clientId.c_str(), mqtt_user, mqtt_password)) {
@@ -105,7 +117,7 @@ void measureTemperature() {
     DEBUG("Error reading temperature sensor measurement.");
     return;
   }
-  // convert float to str, 3 digits + 2 decimal digits
+  // convert float to str, 3 digits + 1 decimal digits
   dtostrf(temp, 3, 1, mqttBuffer);
   DEBUG2("Publish temperature message:", mqttBuffer);
   mqttClient.publish(mqtt_temp_state_topic, mqttBuffer);  
@@ -118,26 +130,24 @@ void measureHumidity() {
     DEBUG("Error reading humidity sensor measurement.");
     return;
   }
-  // convert float to str, 3 digits + 2 decimal digits
+  // convert float to str, 3 digits + 1 decimal digits
   dtostrf(humidity, 3, 1, mqttBuffer);
   DEBUG2("Publish humidity message:", mqttBuffer);
   mqttClient.publish(mqtt_humidity_state_topic, mqttBuffer);  
 }
 
 void setup() {
-  #ifdef DEBUG_ENABLED
-  Serial.begin(115200);
-  #endif
-  setup_wifi();
-  setup_co2();
-  setup_dht();
-  mqttClient.setServer(mqtt_server, 1883);
+  setupSerial();
+  setupWifi();
+  setupCO2();
+  setupDHT();
+  setupMQTT();
 }
 
 void loop()
 {
   if (!mqttClient.connected()) {
-    reconnect();
+    reconnectMQTT();
   }
   mqttClient.loop();
   unsigned long now = millis();
