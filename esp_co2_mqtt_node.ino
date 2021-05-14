@@ -146,7 +146,7 @@ void publishCO2() {
     DEBUG("No valid CO2 measurements to publish");
     return;
   }
-  dtostrf(average, 3, 0, mqttBuffer);
+  dtostrf(average, 4, 0, mqttBuffer);
   DEBUG2("Publish CO2 message:", mqttBuffer);
   mqttClient.publish(mqtt_co2_state_topic, mqttBuffer);  
 }
@@ -248,7 +248,6 @@ float calculateAverage(float buffer[], short bufferSize) {
   short maxIndex = 0;
   short minIndex = 0;
   for (short i = 0; i < bufferSize; i++) {
-    DEBUG2("calc avg val", buffer[i]);
     maxIndex = buffer[i] > buffer[maxIndex] ? i : maxIndex;
     if (buffer[minIndex] == NULL_MEASUREMENT) {
       minIndex = i;
@@ -256,8 +255,6 @@ float calculateAverage(float buffer[], short bufferSize) {
       minIndex = buffer[i] < buffer[minIndex] ? i : minIndex;
     }
   }
-  DEBUG2("maxindex", maxIndex);
-  DEBUG2("minindex", minIndex);
 
   float sum = 0.0;
   short validMeasurementCount = 0;
