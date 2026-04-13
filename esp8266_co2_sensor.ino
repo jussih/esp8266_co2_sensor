@@ -65,7 +65,7 @@ void setupSerial() {
 void setupCO2() {
   co2Serial.begin(MH_Z19_BAUDRATE);
   co2.begin(co2Serial);
-  co2.autoCalibration(false);
+  co2.autoCalibration(true);
   #ifdef DEBUG_ENABLED
   co2.printCommunication(true, true);
   #endif

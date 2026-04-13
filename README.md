@@ -16,3 +16,14 @@ Used as part of a Home Assistant setup for measuring indoor air quality.
 - ESP software serial: https://github.com/plerup/espsoftwareserial/
 - MQTT library: https://pubsubclient.knolleary.net/
 
+## Arduino CLI setup
+
+- Install Arduino CLI
+- `arduino-cli config init`
+- `arduino-cli config add board_manager.additional_urls https://arduino.esp8266.com/stable/package_esp8266com_index.json`
+- `arduino-cli core update-index`
+- `arduino-cli core install esp8266:esp8266`
+- `make libs`
+- `make compile`
+- `make upload [PORT=/dev/ttyUSB0]`
+- `make monitor [PORT=/dev/ttyUSB0]`
